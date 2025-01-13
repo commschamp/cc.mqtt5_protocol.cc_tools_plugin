@@ -56,47 +56,36 @@ cc_msvc_force_warn_opt(/W4)
 
 include(GNUInstallDirs)
 
-set (CORE_LIB_NAME "cc_tools_qt_plugin_cc_mqtt5_protocol_core")
+set (INTERFACE_LIB_PREFIX "cc_tools_qt_plugin_cc_mqtt5")
 
 ######################################################################
 
-function (cc_plugin_core)
-    set (name ${CORE_LIB_NAME})
+function (cc_plugin_Message)
+    set (name ${INTERFACE_LIB_PREFIX}_Message)
     set (src
-        cc_tools_qt_plugin/cc_mqtt5/field/BinData.cpp
-        cc_tools_qt_plugin/cc_mqtt5/field/EnableEnum.cpp
-        cc_tools_qt_plugin/cc_mqtt5/field/Length.cpp
-        cc_tools_qt_plugin/cc_mqtt5/field/MsgId.cpp
-        cc_tools_qt_plugin/cc_mqtt5/field/PacketId.cpp
-        cc_tools_qt_plugin/cc_mqtt5/field/PropertiesList.cpp
-        cc_tools_qt_plugin/cc_mqtt5/field/Property.cpp
-        cc_tools_qt_plugin/cc_mqtt5/field/ProtocolName.cpp
-        cc_tools_qt_plugin/cc_mqtt5/field/Qos.cpp
-        cc_tools_qt_plugin/cc_mqtt5/field/ReasonCode.cpp
-        cc_tools_qt_plugin/cc_mqtt5/field/String.cpp
-        cc_tools_qt_plugin/cc_mqtt5/field/Topic.cpp
-        cc_tools_qt_plugin/cc_mqtt5/field/VarLenInt.cpp
-        cc_tools_qt_plugin/cc_mqtt5/message/Auth.cpp
-        cc_tools_qt_plugin/cc_mqtt5/message/Connack.cpp
-        cc_tools_qt_plugin/cc_mqtt5/message/Connect.cpp
-        cc_tools_qt_plugin/cc_mqtt5/message/Disconnect.cpp
-        cc_tools_qt_plugin/cc_mqtt5/message/Pingreq.cpp
-        cc_tools_qt_plugin/cc_mqtt5/message/Pingresp.cpp
-        cc_tools_qt_plugin/cc_mqtt5/message/Puback.cpp
-        cc_tools_qt_plugin/cc_mqtt5/message/Pubcomp.cpp
-        cc_tools_qt_plugin/cc_mqtt5/message/Publish.cpp
-        cc_tools_qt_plugin/cc_mqtt5/message/Pubrec.cpp
-        cc_tools_qt_plugin/cc_mqtt5/message/Pubrel.cpp
-        cc_tools_qt_plugin/cc_mqtt5/message/Suback.cpp
-        cc_tools_qt_plugin/cc_mqtt5/message/Subscribe.cpp
-        cc_tools_qt_plugin/cc_mqtt5/message/Unsuback.cpp
-        cc_tools_qt_plugin/cc_mqtt5/message/Unsubscribe.cpp
-        cc_tools_qt_plugin/cc_mqtt5/Message.cpp
-        cc_tools_qt_plugin/cc_mqtt5/frame/FrameTransportMessage.cpp
-        cc_tools_qt_plugin/cc_mqtt5/factory/AllMessagesDynMemMsgFactory.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/Message.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/message/Auth.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/message/Connack.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/message/Connect.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/message/Disconnect.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/message/Pingreq.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/message/Pingresp.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/message/Puback.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/message/Pubcomp.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/message/Publish.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/message/Pubrec.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/message/Pubrel.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/message/Suback.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/message/Subscribe.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/message/Unsuback.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/message/Unsubscribe.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/frame/FrameTransportMessage.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/frame/Frame.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/factory/MsgFactory.cpp
     )
 
     add_library (${name} STATIC ${src})
+    set_target_properties(${name} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
     target_link_libraries (${name} PUBLIC cc::cc_mqtt5 cc::comms cc::cc_tools_qt Qt${OPT_QT_MAJOR_VERSION}::Widgets Qt${OPT_QT_MAJOR_VERSION}::Core)
     target_include_directories (${name} PUBLIC ${PROJECT_SOURCE_DIR})
     target_compile_options(${name} PRIVATE
@@ -104,12 +93,11 @@ function (cc_plugin_core)
         $<$<CXX_COMPILER_ID:GNU>:-ftemplate-depth=2048 -fconstexpr-depth=4096 -Wno-unused-local-typedefs>
         $<$<CXX_COMPILER_ID:Clang>:-ftemplate-depth=2048 -fconstexpr-depth=4096 -fbracket-depth=2048 -Wno-unused-local-typedefs>
     )
-
 endfunction()
 
 ######################################################################
 
-function (cc_plugin protocol has_config_widget)
+function (cc_plugin protocol interface)
     string(TOLOWER "cc_tools_plugin_${protocol}" name)
 
     if (NOT "${name}" MATCHES ".*_protocol$")
@@ -133,22 +121,19 @@ function (cc_plugin protocol has_config_widget)
         cc_tools_qt_plugin/cc_mqtt5/plugin/Plugin_${protocol}.h
     )
 
-    if (has_config_widget)
-        list (APPEND src cc_tools_qt_plugin/cc_mqtt5/plugin/ConfigWidget_${protocol}.cpp)
-    endif ()
-
     set(extra_link_opts)
-    if (CMAKE_COMPILER_IS_GNUCC)
+    if ((CMAKE_COMPILER_IS_GNUCC) OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
         set(extra_link_opts "-Wl,--no-undefined")
     endif ()
 
-    add_library (${name} MODULE ${src} ${moc})
-    target_link_libraries (${name} ${CORE_LIB_NAME} cc::cc_tools_qt Qt${OPT_QT_MAJOR_VERSION}::Widgets Qt${OPT_QT_MAJOR_VERSION}::Core ${extra_link_opts})
+    add_library (${name} MODULE ${src})
+    target_link_libraries (${name} ${INTERFACE_LIB_PREFIX}_${interface} cc::cc_tools_qt Qt${OPT_QT_MAJOR_VERSION}::Core ${extra_link_opts})
     target_compile_options(${name} PRIVATE
         $<$<CXX_COMPILER_ID:MSVC>:/bigobj /wd4127 /wd5054>
         $<$<CXX_COMPILER_ID:GNU>:-ftemplate-depth=2048 -fconstexpr-depth=4096>
         $<$<CXX_COMPILER_ID:Clang>:-ftemplate-depth=2048 -fconstexpr-depth=4096 -fbracket-depth=2048>
     )
+    target_include_directories (${name} PRIVATE ${PROJECT_SOURCE_DIR})
 
     install (
         TARGETS ${name}
@@ -174,6 +159,6 @@ if (TARGET cc::cc_tools_qt)
     include_directories (${cc_inc})
 endif ()
 
-cc_plugin_core()
+cc_plugin_Message()
 
-cc_plugin ("CC_MQTT_v5" FALSE)
+cc_plugin ("CC_MQTT_v5" "Message")
