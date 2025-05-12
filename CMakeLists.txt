@@ -79,9 +79,9 @@ function (cc_plugin_Message)
         cc_tools_qt_plugin/Message/cc_mqtt5/message/Subscribe.cpp
         cc_tools_qt_plugin/Message/cc_mqtt5/message/Unsuback.cpp
         cc_tools_qt_plugin/Message/cc_mqtt5/message/Unsubscribe.cpp
+        cc_tools_qt_plugin/Message/cc_mqtt5/factory/MsgFactory.cpp
         cc_tools_qt_plugin/Message/cc_mqtt5/frame/FrameTransportMessage.cpp
         cc_tools_qt_plugin/Message/cc_mqtt5/frame/Frame.cpp
-        cc_tools_qt_plugin/Message/cc_mqtt5/factory/MsgFactory.cpp
     )
 
     add_library (${name} STATIC ${src})
